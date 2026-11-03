@@ -1,141 +1,245 @@
-# BhimShila · भीमशिला
+# BhimShila
 
-**Disaster intelligence for India.** It reads the government's own alert feed,
-ranks every live warning by how many people are actually underneath it, takes
-citizen SOS in Hinglish, and coordinates the NGO teams that respond.
+## Disaster Intelligence, Preparedness and Coordination Platform for India
 
-> Named for the boulder that lodged behind the Kedarnath temple on 16 June 2013
-> and split the debris flow, so the temple and everyone sheltering inside it
-> survived. That was luck. Nobody should need a boulder.
+BhimShila is an integrated disaster management platform designed to connect government disaster alerts, citizen distress reports, risk assessment and on-ground response coordination through a single system.
 
----
+It collects official disaster warnings, prioritises them based on the population potentially affected, accepts citizen SOS reports in Hindi, English and Hinglish, and helps coordinators manage response teams and relief operations.
 
-## The problem
-
-India's disaster machinery is not missing. The IMD and CWC forecast well. NDMA's
-[Sachet](https://sachet.ndma.gov.in/) publishes CAP warnings continuously — 60
-to 100 live on an ordinary monsoon day, from 25 agencies, in a dozen languages.
-
-**It arrives as a flat list.** Nothing on it says which warning covers a million
-people and which covers forty thousand. So at three in the morning, one district
-coordinator does that ranking by hand — while citizen distress arrives on a
-different channel entirely, in Hinglish, over the phone.
-
-On 26 June 2025 a rivulet flash-flooded at Khaniyara near Dharamshala. Two dead,
-six missing. **A red alert was already in force** — for Kangra district, which is
-5,700 km². A warning that size cannot tell one family beside one stream that
-tonight is the night.
-
-## What it does
-
-| | |
-|---|---|
-| **Ingests** | NDMA Sachet CAP 1.2 (with the ETag caching their integration guide requires), Open-Meteo across all 724 districts continuously, USGS, Indian news RSS |
-| **Ranks** | every alert by the population underneath it — Census 2011 projected to 2026 — severity first, people within it |
-| **Verifies** | cross-checks each official alert against our own scan, and reports the disagreement rather than hiding it |
-| **Answers** | typed or spoken questions, Hinglish included — a deterministic router picks the tool, panels open as floating windows, replies are spoken. Works with zero model keys |
-| **Drills down** | click a state → layered movable windows: official alerts in the issuer's language, our risk surface, 72-h forecast, **this fortnight ranked against 86 years of rainfall**, news, population at risk, deployments, live weather map |
-| **Alerts** | in the **issuing authority's own words and language**, never our translation. Telegram + in-app, with per-channel delivery truth, plus per-place watch subscriptions and a notification centre |
-| **Coordinates** | Hinglish SOS → clustered incidents → priority queue → nearest team → deployment log → mission chat, photo ground reports, and volunteer broadcast requests a coordinator approves in one tap |
-| **Survives** | offline shelters, offline SOS / mission / report queues, provider failover, honest degradation |
-
-### The rule the whole thing runs on
-
-> **The model reads and writes language. It never produces a number that decides
-> who is in danger or who gets help first.**
-
-Thresholds, slope, stream distance, severity, priority and ranking are plain code
-with readable weights. A hallucinated risk score is not a bug, it is a harm — and
-it is also what makes the system auditable by a government partner.
-
-Asked to structure *"paani ghar me ghus gaya, chhat pe phase hain"*, a live model
-returned `shelter`, severity 4 — people trapped on a roof by rising water, filed
-as a request for accommodation. The keyword parser had it right. Category and
-severity are resolved deterministically for exactly that reason; the model may
-raise severity, never lower it.
+The project is named after the large boulder that came to rest behind Kedarnath Temple during the June 2013 floods. It diverted the debris flow and helped protect the temple and people sheltering inside. BhimShila takes inspiration from this event and aims to make disaster preparedness and response more organised, accessible and timely.
 
 ---
 
-## Running it
+## 1. Problem Statement
+
+India has an established disaster monitoring infrastructure. Organisations such as the India Meteorological Department (IMD) and Central Water Commission (CWC) provide weather and flood-related information, while NDMA's [Sachet Portal](https://sachet.ndma.gov.in/) publishes Common Alerting Protocol (CAP 1.2) warnings from multiple agencies.
+
+However, disaster information is often distributed across different platforms and channels.
+
+During an ordinary monsoon day, dozens of alerts may be active simultaneously. These warnings are presented without a clear indication of how many people are potentially affected by each alert. As a result, coordinators may have to manually assess and prioritise warnings.
+
+At the same time, citizens report emergencies through phone calls and messages, often using Hinglish or informal language. These distress reports may remain disconnected from official alerts and response operations.
+
+For example, on 26 June 2025, a flash flood occurred near Khaniyara in the Dharamshala region. Despite a red alert being in force for the wider Kangra district, a district-level warning could not communicate the exact risk faced by individual communities near vulnerable streams.
+
+**The central problem is the gap between official disaster warnings and coordinated action at the affected location.**
+
+## 2. Proposed Solution
+
+BhimShila provides a common platform for disaster information, citizen assistance and response coordination.
+
+| Module                          | Functionality                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Alert Ingestion**             | Collects official NDMA Sachet CAP 1.2 alerts and integrates weather information from Open-Meteo, earthquake data from USGS and news feeds.              |
+| **Population-Based Ranking**    | Estimates the population potentially affected by each alert using Census data and ranks warnings based on severity and population exposure.             |
+| **Weather Verification**        | Compares official alerts with independently collected weather information and highlights discrepancies.                                                 |
+| **AI Assistant**                | Accepts typed and spoken queries, including Hinglish, and provides disaster-related information through a tool-based assistant.                         |
+| **Location-Based Analysis**     | Provides state-level drill-downs with alerts, risk information, forecasts, historical rainfall, news, population exposure and deployment details.       |
+| **Notification System**         | Delivers official alerts through Telegram and in-app notifications while tracking delivery status for each channel.                                     |
+| **SOS and Incident Management** | Processes citizen distress reports, groups related reports into incidents and organises them into a priority queue.                                     |
+| **Field Team Coordination**     | Supports team assignment, volunteer acceptance, deployment tracking, mission chat, photo reports and broadcast requests.                                |
+| **Offline Support**             | Keeps essential shelter information available offline and queues SOS reports, missions and field reports for synchronisation when connectivity returns. |
+
+## 3. Core Design Principle: Deterministic Safety Decisions
+
+A central design principle of BhimShila is:
+
+**AI processes language, but it does not independently decide who is in danger or who receives help first.**
+
+Risk calculations, severity thresholds, population exposure and alert ranking are handled by deterministic code with defined and readable rules.
+
+AI is used for language understanding, information extraction and assistance. It does not generate the numerical risk scores or independently override life-safety decisions.
+
+For example, consider the Hinglish message:
+
+*"Paani ghar mein ghus gaya, chhat pe phase hain."*
+
+This message describes people trapped on a roof due to rising water. During testing, an AI model incorrectly classified it as a shelter request with severity 4.
+
+The keyword-based parser correctly identified it as a rescue emergency. BhimShila uses a reconciliation mechanism in which the deterministic parser protects critical categories, and the final severity cannot be lower than the keyword-based severity.
+
+This approach reduces the risk of incorrect AI interpretation in emergency situations and makes important decisions easier to audit.
+
+## 4. Key Features
+
+### 4.1 Real-Time Disaster Alert Monitoring
+
+- Integrates the NDMA Sachet CAP 1.2 alert feed.
+- Uses ETag-based caching to avoid unnecessary repeated downloads.
+- Detects duplicate alerts and tracks changes in alert severity.
+- Monitors weather information across 724 districts.
+- Integrates earthquake information and news feeds.
+
+### 4.2 Population-Weighted Risk Assessment
+
+- Uses Census of India 2011 population and density information.
+- Applies population projections for 2026.
+- Considers alert severity and population exposure.
+- Uses additional geographical and environmental factors in risk assessment.
+- Produces a ranked list of active warnings.
+
+### 4.3 Hinglish-Based SOS Processing
+
+- Accepts distress messages in Hindi, English and Hinglish.
+- Uses keyword matching and AI-assisted language processing.
+- Extracts relevant information such as location, emergency type and number of affected people.
+- Groups multiple reports related to the same incident.
+- Prioritises critical rescue and medical emergencies.
+
+### 4.4 AI-Powered Disaster Assistant
+
+- Supports text and voice-based interaction.
+- Understands disaster-related queries in Hinglish.
+- Uses a deterministic intent router to identify the appropriate operation.
+- Invokes relevant tools for information retrieval and analysis.
+- Can operate without an external model key for supported deterministic queries.
+
+### 4.5 Location-Based Disaster Dashboard
+
+Selecting a state provides access to multiple information panels, including:
+
+- Official alerts in the issuing authority's original language.
+- Disaster risk information.
+- 72-hour weather forecasts.
+- Historical rainfall comparison using an 86-year baseline.
+- News and population exposure.
+- Relief resources and field deployments.
+- Live weather information.
+
+### 4.6 Field Response and Coordination
+
+- SOS reports are converted into manageable incidents.
+- Coordinators can assign missions to nearby response teams.
+- Volunteers can accept and update mission status.
+- Teams can communicate through mission-specific chat.
+- Field personnel can submit photographs and ground reports.
+- Broadcast requests require coordinator approval.
+
+### 4.7 Offline-First Resilience
+
+- Bundled geographical and shelter information supports offline access.
+- SOS, mission and field-report operations can be queued locally.
+- Queued operations synchronise when connectivity is restored.
+- Multiple AI providers support automatic failover.
+- The platform communicates reduced functionality instead of presenting unavailable services as operational.
+
+## 5. Data Sources
+
+The platform uses publicly available datasets and services wherever possible.
+
+| Source                                                        | Purpose                                           |
+| ------------------------------------------------------------- | ------------------------------------------------- |
+| [NDMA Sachet](https://sachet.ndma.gov.in/)                    | Official CAP 1.2 disaster alerts                  |
+| [Open-Meteo](https://open-meteo.com/)                         | Weather forecasts and historical rainfall data    |
+| Census of India 2011                                          | District population and density information       |
+| [Humanitarian Data Exchange (HDX)](https://data.humdata.org/) | 4,275 shelter locations                           |
+| OpenStreetMap Overpass API                                    | Waterway and geographical proximity information   |
+| [USGS](https://earthquake.usgs.gov/)                          | Earthquake information                            |
+| The Hindu, NDTV and PIB                                       | News-based disaster information and corroboration |
+
+The platform uses historical rainfall information to compare current rainfall conditions against long-term patterns. Shelter information is bundled to support offline access.
+
+## 6. Technology Stack
+
+| Component              | Technology                                       |
+| ---------------------- | ------------------------------------------------ |
+| Frontend and Framework | Next.js 16, React 19                             |
+| Programming Language   | TypeScript                                       |
+| Styling                | Tailwind CSS v4                                  |
+| Database               | SQLite / libSQL                                  |
+| Production Database    | Turso                                            |
+| Authentication         | scrypt password hashing and server-side sessions |
+| Maps                   | SVG-based map with bundled GeoJSON               |
+| AI Integration         | OpenAI-compatible LLM client                     |
+| AI Providers           | Sarvam AI, OpenRouter, Groq and Gemini           |
+| Notifications          | Telegram Bot API and in-app notification centre  |
+
+The application uses a local SQLite database during development and supports Turso for production deployment through the libSQL client. The map is built using SVG and bundled GeoJSON rather than relying on an external map tile server.
+
+## 7. Running the Project Locally
+
+### Prerequisites
+
+- Node.js and npm
+- Git
+- Optional API keys for external AI and notification services
+
+### Installation
 
 ```bash
+git clone <repository-url>
+cd bhimshila_minor
 npm install
-cp .env.local.example .env        # then add at least one model key
+```
+
+Create the environment configuration file:
+
+```bash
+cp .env.local.example .env
+```
+
+Add the required configuration values where applicable, then start the development server:
+
+```bash
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open the application at:
 
-**It runs with no keys at all.** A deterministic intent router handles most
-questions without a model, official alerts and the risk scan need no key, and
-every panel can narrate itself. Keys make it better, not functional.
+[http://localhost:3000](http://localhost:3000)
 
-### Environment
+**Note:** The platform supports deterministic functionality without AI model keys. External model keys enable additional AI capabilities, while a Telegram bot token is needed for Telegram alert delivery. A Turso database URL is required only when using the production database.
 
-| Key | Needed for | Free from |
-|---|---|---|
-| `OPENROUTER_API_KEY` | the assistant | [openrouter.ai/keys](https://openrouter.ai/keys) |
-| `GROQ_API_KEY` | faster assistant, failover | [console.groq.com/keys](https://console.groq.com/keys) |
-| `GEMINI_API_KEY` | failover + neural voice | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
-| `TELEGRAM_BOT_TOKEN` | real alert delivery | [@BotFather](https://t.me/BotFather) |
-| `DATABASE_URL` | production only | [turso.tech](https://turso.tech) — a local file otherwise |
+### Environment Variables
 
-Put each on its own line. **An inline `#` comment is read as part of the key** —
-that has bitten this project once already.
+| Variable             | Purpose                                     |
+| -------------------- | ------------------------------------------- |
+| `OPENROUTER_API_KEY` | AI assistant integration                    |
+| `GROQ_API_KEY`       | AI provider and failover                    |
+| `GEMINI_API_KEY`     | AI provider failover and voice capabilities |
+| `TELEGRAM_BOT_TOKEN` | Telegram notifications                      |
+| `DATABASE_URL`       | Production database connection              |
 
-### Checks
+Each environment variable should be placed on a separate line in the environment file. Avoid adding inline comments to secret values.
+
+## 8. Testing and Validation
+
+BhimShila includes an automated test suite consisting of **400+ checks across 15 test suites**.
+
+The tests cover important application workflows and failure scenarios, including:
+
+- Alert ingestion and duplicate detection.
+- Risk assessment and ranking logic.
+- SOS classification and severity reconciliation.
+- AI assistant routing and tool selection.
+- Database operations and mission management.
+- Notification and broadcast approval workflows.
+- Offline queue and synchronisation behaviour.
+
+Testing also helped identify a database argument-ordering issue that could have allowed a broadcast request to be approved more than once. This demonstrates the importance of validating not only normal workflows but also critical failure scenarios.
+
+Run the tests using:
 
 ```bash
-npm run dev                # in one terminal, then:
-npm test                   # every suite; skips (loudly) what needs a server it can't find
+npm test
 ```
 
-400+ checks across 15 suites. `test/README.md` explains what each one is really
-protecting — most of them exist because something broke in a way that was
-silent, including one the newest suite caught the day it was written: a
-swapped SQL argument that let a broadcast request be approved twice.
+## 9. Future Scope
 
----
+The platform can be extended through the following improvements:
 
-## Data
+1. **SMS and IVRS Integration:** Provide emergency reporting and alert delivery to people without smartphones or reliable internet access.
+2. **Government System Integration:** Establish direct integrations with State Disaster Management Authorities and other official systems.
+3. **Multilingual Support:** Extend citizen interaction to languages such as Tamil, Bengali, Telugu and Odia.
+4. **Predictive Risk Modelling:** Incorporate elevation, soil saturation and historical flood patterns to improve pre-disaster risk estimation.
+5. **Drone and Satellite Integration:** Support automated damage assessment using aerial and satellite imagery.
+6. **Government Coordination Dashboard:** Provide district-level dashboards and structured reporting for administrative authorities.
+7. **Inter-District Coordination:** Enable response teams and coordinators to collaborate across district boundaries.
 
-Everything is free and needs no key except where noted.
+## 10. Conclusion
 
-| Source | Used for |
-|---|---|
-| [NDMA Sachet](https://sachet.ndma.gov.in/) CAP 1.2 | official alerts — the authoritative layer |
-| [Open-Meteo](https://open-meteo.com/) | rainfall forecast + 80y archive, 724 districts in 4 bulk calls |
-| Census of India 2011 | district population, density, vulnerability → projected to 2026 |
-| [HOT / HDX](https://data.humdata.org/) | 4,275 shelters, bundled and answering offline |
-| OSM Overpass | waterway proximity |
-| USGS | earthquakes |
-| The Hindu · NDTV · PIB | ground corroboration |
+BhimShila brings together official disaster alerts, population-based risk assessment, citizen SOS processing and field-team coordination in a unified platform.
 
-`docs/DATA_SOURCES.md` has the endpoints, the two parsing traps in the Sachet
-feed that fail silently, and what is dead (ReliefWeb v1/v2, IMD's own API).
+Its key contribution is connecting broad disaster warnings with location-specific population exposure and response operations. By combining deterministic risk assessment, Hinglish-based citizen interaction, AI-assisted information processing and offline support, the platform aims to make disaster response more organised, accessible and reliable.
 
----
-
-## Design
-
-`docs/PLATFORM.md` is the full product design — four roles, screens, the state
-drill-down, the AI surface map, data model, API contracts, security and privacy
-posture, deployment. Each section is marked **shipped**, **by 10 Aug**, or
-**roadmap**, so nothing in it reads as a claim about what exists.
-
-Other docs: `PRD.md`, `SYSTEM_DESIGN.md` (roles and the deployment log),
-`DATA_AUDIT.md` (what data was missing and why), `FEATURES.md`.
-
----
-
-## Stack
-
-Next.js App Router · TypeScript · libsql/SQLite → Turso · scrypt auth with
-server sessions · hand-built SVG map over bundled GeoJSON (no tile server, works
-offline) · OpenAI-compatible model client across four free providers with
-automatic failover.
-
----
-
-Built for **BestPossible.AI Build Season 2026** — Governance & civic.
-"# bhimshila_minor" 
+The project demonstrates how publicly available disaster information, modern web technologies and carefully controlled AI integration can be combined to support disaster preparedness and emergency coordination.
