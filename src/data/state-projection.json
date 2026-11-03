@@ -1,0 +1,167 @@
+{
+ "source": "Population Projections for India and States 2011-2036, Table 8. National Commission on Population, Ministry of Health and Family Welfare, 2019.",
+ "url": "https://nhm.gov.in/New_Updates_2018/Report_Population_Projection_2019.pdf",
+ "baseYear": 2011,
+ "targetYear": 2026,
+ "india": {
+  "p2011": 1210855000,
+  "p2026": 1423435000
+ },
+ "states": {
+  "INDIA": {
+   "p2011": 1210855000,
+   "p2026": 1423435000,
+   "growth": 1.1756
+  },
+  "JAMMU & KASHMIR": {
+   "p2011": 12267000,
+   "p2026": 13701000,
+   "growth": 1.1169
+  },
+  "HIMACHAL PRADESH": {
+   "p2011": 6865000,
+   "p2026": 7505000,
+   "growth": 1.0932
+  },
+  "PUNJAB": {
+   "p2011": 27743000,
+   "p2026": 31318000,
+   "growth": 1.1289
+  },
+  "HARYANA": {
+   "p2011": 25351000,
+   "p2026": 31299000,
+   "growth": 1.2346
+  },
+  "NCT OF DELHI": {
+   "p2011": 16788000,
+   "p2026": 22540000,
+   "growth": 1.3426
+  },
+  "RAJASTHAN": {
+   "p2011": 68548000,
+   "p2026": 83642000,
+   "growth": 1.2202
+  },
+  "UTTAR PRADESH": {
+   "p2011": 199812000,
+   "p2026": 242859000,
+   "growth": 1.2154
+  },
+  "BIHAR": {
+   "p2011": 104099000,
+   "p2026": 132265000,
+   "growth": 1.2706
+  },
+  "ASSAM": {
+   "p2011": 31206000,
+   "p2026": 36717000,
+   "growth": 1.1766
+  },
+  "WEST BENGAL": {
+   "p2011": 91276000,
+   "p2026": 100522000,
+   "growth": 1.1013
+  },
+  "JHARKHAND": {
+   "p2011": 32988000,
+   "p2026": 40958000,
+   "growth": 1.2416
+  },
+  "ODISHA": {
+   "p2011": 41974000,
+   "p2026": 44677000,
+   "growth": 1.0644
+  },
+  "CHHATTISGARH": {
+   "p2011": 25545000,
+   "p2026": 31211000,
+   "growth": 1.2218
+  },
+  "MADHYA PRADESH": {
+   "p2011": 72627000,
+   "p2026": 89673000,
+   "growth": 1.2347
+  },
+  "GUJARAT": {
+   "p2011": 60440000,
+   "p2026": 74086000,
+   "growth": 1.2258
+  },
+  "MAHARASHTRA": {
+   "p2011": 112374000,
+   "p2026": 129308000,
+   "growth": 1.1507
+  },
+  "ANDHRA PRADESH": {
+   "p2011": 49577000,
+   "p2026": 53709000,
+   "growth": 1.0833
+  },
+  "KARNATAKA": {
+   "p2011": 61095000,
+   "p2026": 68962000,
+   "growth": 1.1288
+  },
+  "KERALA": {
+   "p2011": 33406000,
+   "p2026": 36207000,
+   "growth": 1.0838
+  },
+  "TAMIL NADU": {
+   "p2011": 72147000,
+   "p2026": 77546000,
+   "growth": 1.0748
+  },
+  "CHANDIGARH": {
+   "p2011": 1055000,
+   "p2026": 1267000,
+   "growth": 1.2009
+  },
+  "UTTARAKHAND": {
+   "p2011": 10086000,
+   "p2026": 11993000,
+   "growth": 1.1891
+  },
+  "SIKKIM": {
+   "p2011": 611000,
+   "p2026": 708000,
+   "growth": 1.1588
+  },
+  "DAMAN & DIU": {
+   "p2011": 243000,
+   "p2026": 705000,
+   "growth": 2.9012
+  },
+  "DADRA & NAGAR": {
+   "p2011": 344000,
+   "p2026": 836000,
+   "growth": 2.4302
+  },
+  "GOA": {
+   "p2011": 1459000,
+   "p2026": 1599000,
+   "growth": 1.096
+  },
+  "LAKSHADWEEP": {
+   "p2011": 64000,
+   "p2026": 70000,
+   "growth": 1.0938
+  },
+  "PUDUCHERRY": {
+   "p2011": 1248000,
+   "p2026": 1757000,
+   "growth": 1.4079
+  },
+  "ANDAMAN AND NICOBAR ISLANDS": {
+   "p2011": 381000,
+   "p2026": 406000,
+   "growth": 1.0656
+  },
+  "DADRA AND NAGAR HAVELI AND DAMAN AND DIU": {
+   "p2011": 587000,
+   "p2026": 1541000,
+   "growth": 2.6252
+  }
+ }
+}

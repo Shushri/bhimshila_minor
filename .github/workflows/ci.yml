@@ -1,0 +1,101 @@
+name: CI
+
+# Runs on every push and pull request.
+#
+# The batch fix that took /api/watch from a 504 to 0.24s went to production
+# without a single check running, because there was nothing here to run them.
+# That is the gap this closes: a deploy should not be the first thing that
+# discovers a change is broken.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Everything that must be true every time ────────────────────────────────
+  #
+  # Types, lint, a real production build, and the suites whose answers do not
+  # depend on anyone else's server being up. This job is the gate.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Deliberately no DATABASE_URL: CI writes to a throwaway SQLite file, never
+    # to the production Turso database. A test run must not be able to touch
+    # real deployment data.
+    #
+    # Deliberately no model keys either. The app is built to work without them —
+    # a deterministic router picks the tool, alerts and the scan need no key —
+    # so running keyless is not a compromise, it is the claim being checked.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint src --ext .ts,.tsx --max-warnings 0
+
+      - name: Build
+        run: npm run build
+
+      # Server and checks in one step on purpose. A background process left
+      # running across steps is at the runner's mercy, and half these suites
+      # need it — a runner that reaped it would skip them and still report
+      # success, which is the failure mode the runner was written to avoid.
+      - name: Checks
+        run: |
+          npm run start &
+          APP=$!
+          trap 'kill $APP 2>/dev/null || true' EXIT
+
+          # Poll rather than sleep a fixed guess: a cold start of eight seconds
+          # and one of twenty should both work, and neither should cost the
+          # difference.
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3000/api/auth && break
+            if [ "$i" = 60 ]; then echo "app did not come up"; exit 1; fi
+            sleep 1
+          done
+          echo "app up after ${i}s"
+
+          node test/run.mjs --only=deterministic
+
+  # ── Everything that talks to somebody else's server ────────────────────────
+  #
+  # NDMA Sachet and Open-Meteo, live and on purpose — a fixture would freeze
+  # today's shape and stop testing the thing that actually breaks. But a
+  # government feed being slow is not a code failure, and a pipeline that goes
+  # red for it teaches everyone to ignore the pipeline. So this reports and
+  # never blocks.
+  live-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Checks against live sources
+        run: node test/run.mjs --only=live

@@ -1,0 +1,50 @@
+name: Watch NDMA Sachet
+
+# Continuous monitoring, on the only free scheduler that is fast enough.
+# Vercel's Hobby tier caps cron at once per day, which cannot monitor anything;
+# GitHub Actions is free on a public repo and allows every few minutes.
+#
+# GitHub runs scheduled jobs on a best-effort queue and can delay them under
+# load, so this is a floor on freshness, not a guarantee. The ops console polls
+# the same endpoint while it is open, which covers the demo either way.
+
+on:
+  schedule:
+    # Every 10 minutes. NDMA nowcasts run on a 3-hour window, so polling harder
+    # buys very little and asks more of a government host that is already slow.
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+# Two sweeps at once would each see the other's alerts as new.
+concurrency:
+  group: watch-sachet
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      # Only for the summary script. Sparse and depth-1: the sweep needs one
+      # file, not the repository.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Sweep for new official alerts
+        env:
+          BASE_URL: ${{ secrets.DAI_BASE_URL }}
+          WATCH_TOKEN: ${{ secrets.WATCH_TOKEN }}
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "DAI_BASE_URL secret is not set — nothing to sweep yet."
+            exit 0
+          fi
+
+          response=$(curl -sS --max-time 90 --fail-with-body \
+            ${WATCH_TOKEN:+-H "Authorization: Bearer $WATCH_TOKEN"} \
+            "$BASE_URL/api/watch") || {
+              echo "Sweep request failed"; echo "$response"; exit 1;
+            }
+
+          echo "$response" | python3 .github/scripts/sweep-summary.py

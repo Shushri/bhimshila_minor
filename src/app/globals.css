@@ -1,0 +1,274 @@
+@import "tailwindcss";
+
+/*
+ * BhimShila — dark-first. This product is operated at night, in the field, on a
+ * phone. Sequential blue carries magnitude; status colours are reserved and
+ * never reused as a series.
+ *
+ * The plane is a deep navy rather than a warm black: the map, the charts and
+ * the sequential ramp are all blue, and a blue-black ground makes them read
+ * as one instrument instead of blue marks on brown glass.
+ */
+:root {
+  color-scheme: dark;
+
+  --plane: #0a0e16;
+  --surface: #10151d;
+  --surface-2: #182029;
+
+  --ink-primary: #ffffff;
+  /* Alias — half the components write the short name. Undefined it silently
+     inherits, which happens to look right and breaks the moment context
+     changes; defined, it is simply the same ink. */
+  --ink: #ffffff;
+  --ink-secondary: #c3c2b7;
+  --ink-muted: #898781;
+
+  --gridline: #1c2836;
+  --baseline: #263447;
+  --border: rgba(127, 182, 240, 0.13);
+
+  /* sequential — density, risk, magnitude */
+  --seq-100: #cde2fb;
+  --seq-250: #86b6ef;
+  --seq-400: #3987e5;
+  --seq-550: #1c5cab;
+  --seq-650: #104281;
+
+  /* status — reserved, icon+label always */
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  /* A faint aurora at the top of the plane — the depth cue that makes the
+     surfaces read as panels over a room rather than boxes on a page. */
+  background:
+    radial-gradient(1100px 420px at 50% -140px, rgba(28, 92, 171, 0.22), transparent 70%),
+    var(--plane);
+  color: var(--ink-primary);
+  /* --font-sans is IBM Plex, loaded in the layout; the stack behind it keeps
+     Devanagari and offline dev builds honest. */
+  font-family: var(--font-sans, system-ui), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── the polish layer ──────────────────────────────────────────────────────
+   Element-level, so it reaches every control in the app without touching a
+   component. Restraint is the design: one hue, small movements, nothing that
+   competes with the data. */
+
+::selection {
+  background: #1c5cab;
+  color: #fff;
+}
+
+button {
+  cursor: pointer;
+  transition: filter 120ms ease, transform 80ms ease, box-shadow 120ms ease;
+}
+button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+button:active:not(:disabled) {
+  transform: translateY(0.5px);
+}
+button:disabled {
+  cursor: default;
+}
+
+a {
+  transition: color 120ms ease, filter 120ms ease;
+}
+a:hover {
+  filter: brightness(1.1);
+}
+
+/* Focus is part of the aesthetic, not an afterthought — a thin brand ring,
+   only for keyboard users. */
+:focus-visible {
+  outline: 2px solid rgba(63, 146, 232, 0.75);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+input,
+textarea,
+select {
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+kbd {
+  font-family: var(--font-sans, system-ui);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+}
+
+/* The replay scrubber and anything else that slides. Browser-default range
+   inputs are the one control no theme survives. */
+input[type="range"] {
+  appearance: none;
+  height: 22px;
+  background: transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--seq-550), var(--seq-400));
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -5px;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: #e8f3ff;
+  border: 2px solid var(--seq-400);
+  box-shadow: 0 0 8px rgba(63, 146, 232, 0.6);
+  transition: transform 100ms ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--seq-550);
+}
+input[type="range"]::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #e8f3ff;
+  border: 2px solid var(--seq-400);
+}
+
+/* Cards that answer the cursor. Applied by class where a surface is
+   genuinely interactive — a tile that lifts but does nothing is a lie. */
+.tile {
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+.tile:hover {
+  border-color: rgba(127, 182, 240, 0.35) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* The ask dock wakes when it takes focus — the platform noticing you. */
+.dock {
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.dock:focus-within {
+  border-color: rgba(63, 146, 232, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(63, 146, 232, 0.25),
+    0 0 24px rgba(28, 92, 171, 0.35),
+    0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* List rows brighten without lifting — a dense feed that jiggles is noise. */
+.row-hover {
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.row-hover:hover {
+  background: rgba(23, 80, 143, 0.16) !important;
+}
+
+/* The map sits in a lit well, not on a flat card. */
+.map-frame {
+  box-shadow:
+    inset 0 0 0 1px rgba(127, 182, 240, 0.08),
+    inset 0 0 60px rgba(5, 7, 12, 0.55);
+  border-radius: 0.5rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes panel-in {
+  /* A shallow card-tilt on entry — the window arrives out of the room's depth
+     rather than fading in place. 4° is the whole trick; more reads as CSS. */
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateX(4deg) scale(0.965) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel-in {
+  animation: panel-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+/* The platform-quality details: no grey tap flashes on touch, no page bounce
+   behind the app shell, and reduced-motion silences EVERY movement we added —
+   a tilt-in that half obeys the setting is worse than none. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  overscroll-behavior-y: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-in,
+  .pulse-ring {
+    animation: none;
+  }
+  .tile,
+  .dock,
+  .row-hover,
+  button,
+  a,
+  input[type="range"]::-webkit-slider-thumb {
+    transition: none !important;
+  }
+  .tile:hover {
+    transform: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--baseline);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--seq-550);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
